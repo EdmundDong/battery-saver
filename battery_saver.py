@@ -24,22 +24,25 @@ def charge(target):
         post(f'{url[0]}charge{url[1]}')
     if target == 'off':
         printt('Unplugging laptop')
-        post(f'{url[0]}charge{url[1]}')
+        post(f'{url[0]}drain{url[1]}')
 
 # main control function
 if __name__ == "__main__":
-    turn_on = 40
+    turn_on = 25
     turn_off = 80
     state = 'charge'
     sleep_minutes = 3
+    percent_memory = None
     while(True):
         percent, plugged = get_battery_data()
-        printt(f'{percent}% and {"Plugged In" if plugged else "Not Plugged In"}')
+        percent_future = percent - (percent_memory - percent) if percent_memory is not None else percent
+        percent_memory = percent
+        printt(f'{percent}% and {"Plugged In" if plugged else "Not Plugged In"} (future: {percent_future})')
         # looping states
-        if state == 'charge' and percent >= turn_off:
+        if state == 'charge' and percent_future >= turn_off:
             charge('off')
             state = 'drain'
-        elif state == 'drain' and percent <= turn_on:
+        elif state == 'drain' and percent_future <= turn_on:
             charge('on')
             state = 'charge'
         # redundancy
