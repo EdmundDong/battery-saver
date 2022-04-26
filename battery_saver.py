@@ -18,7 +18,7 @@ def get_battery_data():
     return (battery.percent, battery.power_plugged) if battery is not None else (None, None)
 
 # change outlet charge/drain battery
-def charge(target):
+def outlet(target):
     if target == 'on':
         printt('Plugging laptop in')
         post(f'{url[0]}charge{url[1]}')
@@ -38,16 +38,16 @@ if __name__ == "__main__":
         percent_future = percent - (percent_memory - percent) if percent_memory is not None else percent
         percent_memory = percent
         printt(f'{percent}% and {"Plugged In" if plugged else "Not Plugged In"} (future: {percent_future})')
-        # looping states
+        # state change
         if state == 'charge' and percent_future >= turn_off:
-            charge('off')
+            outlet('off')
             state = 'drain'
         elif state == 'drain' and percent_future <= turn_on:
-            charge('on')
+            outlet('on')
             state = 'charge'
-        # redundancy
-        elif state == 'charge' and not plugged:
-            charge('on')
-        elif state == 'drain' and plugged:
-            charge('off')
+        # state redundancy/save from limbo
+        elif state == 'charge' and (not plugged or percent_future <= turn_on):
+            outlet('on')
+        elif state == 'drain' and (plugged or percent_future >= turn_off):
+            outlet('off')
         sleep(60 * sleep_minutes)
