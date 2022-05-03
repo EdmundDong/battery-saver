@@ -22,15 +22,17 @@ def outlet(target):
     if target == 'on':
         printt('Plugging laptop in')
         post(f'{url[0]}charge{url[1]}')
+        return 'charge'
     if target == 'off':
         printt('Unplugging laptop')
         post(f'{url[0]}drain{url[1]}')
+        return 'drain'
 
 # main control function
 if __name__ == "__main__":
     turn_on = 40
     turn_off = 80
-    state = 'charge'
+    state = outlet('on')
     sleep_minutes = 3
     percent_memory = None
     while(True):
@@ -40,14 +42,12 @@ if __name__ == "__main__":
         printt(f'{percent}% and {"Plugged In" if plugged else "Not Plugged In"} (future: {percent_future})')
         # state change
         if state == 'charge' and percent_future >= turn_off:
-            outlet('off')
-            state = 'drain'
+            state = outlet('off')
         elif state == 'drain' and percent_future <= turn_on:
-            outlet('on')
-            state = 'charge'
+            state = outlet('on')
         # state redundancy/save from limbo
-        elif state == 'charge' and (not plugged or percent_future <= turn_on):
+        elif state == 'charge' and percent_future <= turn_on: # (not plugged or percent_future <= turn_on): # docked laptop is always plugged
             outlet('on')
-        elif state == 'drain' and (plugged or percent_future >= turn_off):
+        elif state == 'drain' and percent_future >= turn_off: # (plugged or percent_future >= turn_off): # docked laptop is always plugged
             outlet('off')
         sleep(60 * sleep_minutes)
